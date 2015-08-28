@@ -9,9 +9,20 @@ VTL STL File reader with wxPython GUI
 import wx
 import vtk
 from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
+import numpy as np
+#e_a = 10
+#a_a = 70
+lwX = 32
+lwY = 32
+lwZ = 32
 
-e_a = 10
-a_a = 70
+stoProcent = lwX*lwY
+licz = 0
+
+siatkaX = np.arange(0.0,lwX+1,1.0)
+siatkaY = np.arange(0.0,lwY+1,1.0)
+siatkaZ = np.arange(0.0,lwZ+1,1.0)
+
 
 pSource = [-5.0,1.0,1.0]
 pTarget = [5.0,-1.0,-0.5]
@@ -23,6 +34,27 @@ ymax = 20.0
 zmin = -20.0
 zmax = 60.0
 
+rozmiarX=xmax-xmin
+rozmiarY=ymax-ymin
+rozmiarZ=zmax-zmin
+
+siatkaX[1]=xmin
+siatkaY[1]=ymin
+siatkaZ[1]=zmin   
+
+hX = float(rozmiarX/(lwX-1))
+hY = float(rozmiarY/(lwY-1))
+hZ = float(rozmiarZ/(lwZ-1))
+
+for i in range(2,lwX+1):
+    siatkaX[i] = siatkaX[i-1]+hX   
+    
+for i in range(2,lwY+1):
+    siatkaY[i] = siatkaY[i-1]+hY   
+    
+for i in range(2,lwZ+1):
+    siatkaZ[i] = siatkaZ[i-1]+hZ   
+    
 pp1 = [xmin,ymin,zmin]
 pp2 = [xmax,ymin,zmin]
 pp3 = [xmin,ymax,zmin]
@@ -32,7 +64,7 @@ pp6 = [xmax,ymax,zmax]
 pp7 = [xmin,ymin,zmax]
 pp8 = [xmax,ymin,zmax]
 
-def addPoint(renderer, p, radius=1.0, color=[0.0,0.0,0.0]):
+def addPoint(renderer, p, radius=0.5, color=[0.0,0.0,0.0]):
     point = vtk.vtkSphereSource()
     point.SetCenter(p)
     point.SetRadius(radius)
@@ -67,12 +99,13 @@ def IsInside(pX,pY,pZ,mesh):
     select.SetSurface(mesh)
             
     pts = vtk.vtkPoints()
-    pts.InsertNextPoint(pX,pY,pZ)
+    pts.InsertNextPoint(float(pX),float(pY),float(pZ))
     pts_pd = vtk.vtkPolyData()
     pts_pd.SetPoints(pts)
     select.SetInput(pts_pd)
     select.Update()
-    print select.IsInside(0)
+   # print pX,pY,pZ,select.IsInside(0)
+    return select.IsInside(0)
             #select.Update()
     
  
@@ -168,8 +201,20 @@ class p1(wx.Panel):
             select.SetSurface(mesh)
             
            
-            for i in range(11):
-                IsInside(i-5,0.1,0.1,mesh)
+           # for i in range(11):
+                #IsInside(i-5,0.1,0.1,mesh)
+            global licz 
+            for i in range(1,lwX+1):
+                for j in range(1,lwY+1):
+                    licz += 1
+                    print (licz/float(stoProcent))*100.0
+                    for k in range(1,lwZ+1):
+                        sprawdzenie = IsInside(siatkaX[i],siatkaY[j],siatkaZ[k],mesh)
+                        pS = [siatkaX[i],siatkaY[j],siatkaZ[k]]
+                        if sprawdzenie > 0.5:
+                            addPoint(self.ren, pS, color=[1.0,0.0,0.0]) 
+                        #else:
+                            #addPoint(self.ren, pS, color=[0.0,1.0,0.0]) 
             #####################################################################################
             pointsVTKIntersectionData = pointsVTKintersection.GetData()
             noPointsVTKIntersection = pointsVTKIntersectionData.GetNumberOfTuples()
