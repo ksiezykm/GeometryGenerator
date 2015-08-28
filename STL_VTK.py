@@ -10,6 +10,9 @@ import wx
 import vtk
 from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 
+e_a = 10
+a_a = 70
+
 pSource = [-5.0,1.0,1.0]
 pTarget = [5.0,-1.0,-0.5]
 
@@ -88,6 +91,7 @@ class p1(wx.Panel):
         self.ren = vtk.vtkRenderer()
         self.filename=""
         self.isploted = False
+        self.cam = self.ren.GetActiveCamera()
             
     def renderthis(self):
             # open a window and create a renderer           
@@ -100,6 +104,8 @@ class p1(wx.Panel):
             if openFileDialog.ShowModal() == wx.ID_CANCEL:
                 return
             self.filename = openFileDialog.GetPath()
+            
+            
             # render the data
             reader = vtk.vtkSTLReader()
             reader.SetFileName(self.filename)
@@ -184,15 +190,17 @@ class p1(wx.Panel):
  
             self.ren.ResetCamera()
             self.ren.ResetCameraClippingRange()
-            cam = self.ren.GetActiveCamera()
-            cam.Elevation(10)
-            cam.Azimuth(70)
+            #cam = self.ren.GetActiveCamera()
+            self.cam.Elevation(10)
+            self.cam.Azimuth(40)
+            #cam.SetPosition(0,0,1)
+            #cam.SetFocalPoint(0,0,-50)
             self.isploted = True
             self.ren.Render()
  
 class VTKFrame(wx.Frame):
     def __init__(self,parent,title):
-        wx.Frame.__init__(self,parent,title=title,size=(950,900), style=wx.MINIMIZE_BOX|wx.SYSTEM_MENU|
+        wx.Frame.__init__(self,parent,title=title,size=(800,900), style=wx.MINIMIZE_BOX|wx.SYSTEM_MENU|
                   wx.CAPTION|wx.CLOSE_BOX|wx.CLIP_CHILDREN)
         self.sp = wx.SplitterWindow(self)
         self.p1 = p1(self.sp)
@@ -205,12 +213,38 @@ class VTKFrame(wx.Frame):
          
         self.plotbut = wx.Button(self.p2,-1,"Browse for STL file ", size=(120,20),pos=(10,10))
         self.plotbut.Bind(wx.EVT_BUTTON,self.plot)
+        
+        self.Xview = wx.Button(self.p2,-1,"X ", size=(70,20),pos=(200,10))
+        self.Xview.Bind(wx.EVT_BUTTON,self.Xview_position)
+        
+        self.Yview = wx.Button(self.p2,-1,"Y ", size=(70,20),pos=(300,10))
+        self.Yview.Bind(wx.EVT_BUTTON,self.Yview_position)
          
  
     def plot(self,event):
         self.p1.renderthis()
         self.SetTitle("STL File Viewer: "+self.p1.filename)
         self.statusbar.SetStatusText("Use W,S,F,R keys and mouse to interact with the model ")
+        
+    def Xview_position(self,event): 
+        self.p1.cam.Elevation(90)
+        self.p1.cam.Azimuth(0)
+        self.p1.ren.SetBackground(1,1,1)
+        self.p1.widget.Render()
+        print "Xview"
+        #self.p1.ren.Render()
+        
+        
+    def Yview_position(self,event):        
+        self.p1.cam.Elevation(0)
+        self.p1.cam.Azimuth(90) 
+        self.p1.ren.SetBackground(1,1,0)
+        self.p1.widget.Render()
+        print "Yview"
+        #self.p1.ren.Render()
+       
+        
+    
  
          
 app = wx.App(redirect=False)
