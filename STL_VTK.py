@@ -10,14 +10,18 @@ import wx
 import vtk
 from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 import numpy as np
+from vtk import vtkGlyph3D
 #e_a = 10
 #a_a = 70
-lwX = 32
-lwY = 32
-lwZ = 32
+lwX = 128
+lwY = 128
+lwZ = 4
 
 stoProcent = lwX*lwY
 licz = 0
+licz2 = 0
+
+zrodloGlyph = []
 
 siatkaX = np.arange(0.0,lwX+1,1.0)
 siatkaY = np.arange(0.0,lwY+1,1.0)
@@ -27,12 +31,12 @@ siatkaZ = np.arange(0.0,lwZ+1,1.0)
 pSource = [-5.0,1.0,1.0]
 pTarget = [5.0,-1.0,-0.5]
 
-xmin = -20.0
-xmax = 20.0
-ymin = -20.0
-ymax = 20.0
+xmin = -80.0
+xmax = 30.0
+ymin = -40.0
+ymax = 40.0
 zmin = -20.0
-zmax = 60.0
+zmax = 20.0
 
 rozmiarX=xmax-xmin
 rozmiarY=ymax-ymin
@@ -68,9 +72,12 @@ def addPoint(renderer, p, radius=0.5, color=[0.0,0.0,0.0]):
     point = vtk.vtkSphereSource()
     point.SetCenter(p)
     point.SetRadius(radius)
-    point.SetPhiResolution(10)
-    point.SetThetaResolution(10)
+    point.SetPhiResolution(3)
+    point.SetThetaResolution(3)
     
+    #pointGlyph = vtkGlyph3D()
+   # pointGlyph.SetSourceConnection(point.GetOutputPort())
+      
     mapper = vtk.vtkPolyDataMapper()
     mapper.SetInputConnection(point.GetOutputPort())
     
@@ -79,6 +86,7 @@ def addPoint(renderer, p, radius=0.5, color=[0.0,0.0,0.0]):
     actor.GetProperty().SetColor(color)
     
     renderer.AddActor(actor)
+   
     
 def addLine(renderer, p1, p2, color=[0.0,0.0,1.0]):
     line = vtk.vtkLineSource()
@@ -200,21 +208,49 @@ class p1(wx.Panel):
             select = vtk.vtkSelectEnclosedPoints()
             select.SetSurface(mesh)
             
-           
+            polydat = vtk.vtkPolyData()
+            pS2 = vtk.vtkPoints()
            # for i in range(11):
                 #IsInside(i-5,0.1,0.1,mesh)
             global licz 
+            global licz2
             for i in range(1,lwX+1):
                 for j in range(1,lwY+1):
                     licz += 1
                     print (licz/float(stoProcent))*100.0
                     for k in range(1,lwZ+1):
+                        sprawdzenie = 0
                         sprawdzenie = IsInside(siatkaX[i],siatkaY[j],siatkaZ[k],mesh)
                         pS = [siatkaX[i],siatkaY[j],siatkaZ[k]]
-                        if sprawdzenie > 0.5:
-                            addPoint(self.ren, pS, color=[1.0,0.0,0.0]) 
+                        if sprawdzenie == 1:
+                            licz2 += 1
+                            pS2.InsertNextPoint(pS)
+                            #zrodloGlyph[licz2] = pS
+                            #addPoint(self.ren, pS, color=[1.0,0.0,0.0]) 
                         #else:
-                            #addPoint(self.ren, pS, color=[0.0,1.0,0.0]) 
+                            #addPoint(self.ren, pS, color=[0.0,1.0,0.0])
+                         
+            polydat.SetPoints(pS2)
+            
+            ball = vtk.vtkSphereSource()
+            #point.SetCenter(pS)
+            ball.SetRadius(0.5)
+            ball.SetPhiResolution(2)
+            ball.SetThetaResolution(2)
+    
+            ballGlyph = vtkGlyph3D()
+            ballGlyph.SetColorModeToColorByScalar()
+            ballGlyph.SetSourceConnection(ball.GetOutputPort())
+            ballGlyph.SetInput(polydat)
+      
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetInputConnection(ballGlyph.GetOutputPort())
+    
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            actor.GetProperty().SetColor([1.0,0.0,0.0])
+    
+            self.ren.AddActor(actor)
             #####################################################################################
             pointsVTKIntersectionData = pointsVTKintersection.GetData()
             noPointsVTKIntersection = pointsVTKIntersectionData.GetNumberOfTuples()
@@ -236,7 +272,7 @@ class p1(wx.Panel):
             self.ren.ResetCamera()
             self.ren.ResetCameraClippingRange()
             #cam = self.ren.GetActiveCamera()
-            self.cam.Elevation(10)
+            self.cam.Elevation(50)
             self.cam.Azimuth(40)
             #cam.SetPosition(0,0,1)
             #cam.SetFocalPoint(0,0,-50)
@@ -272,9 +308,9 @@ class VTKFrame(wx.Frame):
         self.statusbar.SetStatusText("Use W,S,F,R keys and mouse to interact with the model ")
         
     def Xview_position(self,event): 
-        self.p1.cam.Elevation(90)
+        self.p1.cam.Elevation(10)
         self.p1.cam.Azimuth(0)
-        self.p1.ren.SetBackground(1,1,1)
+        #self.p1.ren.SetBackground(1,1,1)
         self.p1.widget.Render()
         print "Xview"
         #self.p1.ren.Render()
@@ -282,8 +318,8 @@ class VTKFrame(wx.Frame):
         
     def Yview_position(self,event):        
         self.p1.cam.Elevation(0)
-        self.p1.cam.Azimuth(90) 
-        self.p1.ren.SetBackground(1,1,0)
+        self.p1.cam.Azimuth(10) 
+        #self.p1.ren.SetBackground(1,1,0)
         self.p1.widget.Render()
         print "Yview"
         #self.p1.ren.Render()
