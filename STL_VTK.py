@@ -13,13 +13,14 @@ import numpy as np
 from vtk import vtkGlyph3D
 #e_a = 10
 #a_a = 70
-lwX = 128
-lwY = 128
-lwZ = 4
+lwX = 25
+lwY = 12
+lwZ = 16
 
 stoProcent = lwX*lwY
 licz = 0
 licz2 = 0
+warunek=0
 
 zrodloGlyph = []
 
@@ -28,8 +29,8 @@ siatkaY = np.arange(0.0,lwY+1,1.0)
 siatkaZ = np.arange(0.0,lwZ+1,1.0)
 
 
-pSource = [-5.0,1.0,1.0]
-pTarget = [5.0,-1.0,-0.5]
+pSource = [-80.0,0.0,0.0]
+pTarget = [30.0,0.0,0.0]
 
 xmin = -80.0
 xmax = 30.0
@@ -67,6 +68,24 @@ pp5 = [xmin,ymax,zmax]
 pp6 = [xmax,ymax,zmax]
 pp7 = [xmin,ymin,zmax]
 pp8 = [xmax,ymin,zmax]
+
+def addEdges(renderer):
+    
+    addLine(renderer, pp1, pp2)
+    addLine(renderer, pp3, pp4)
+    addLine(renderer, pp5, pp6)
+    addLine(renderer, pp7, pp8)
+            
+    addLine(renderer, pp1, pp7)
+    addLine(renderer, pp3, pp5)
+    addLine(renderer, pp4, pp6)
+    addLine(renderer, pp2, pp8)
+            
+    addLine(renderer, pp1, pp3)
+    addLine(renderer, pp7, pp5)
+    addLine(renderer, pp4, pp2)
+    addLine(renderer, pp6, pp8)            
+            
 
 def addPoint(renderer, p, radius=0.5, color=[0.0,0.0,0.0]):
     point = vtk.vtkSphereSource()
@@ -134,7 +153,7 @@ class p1(wx.Panel):
         self.isploted = False
         self.cam = self.ren.GetActiveCamera()
             
-    def renderthis(self):
+    def renderthis(self,warunek):
             # open a window and create a renderer           
             self.widget.GetRenderWindow().AddRenderer(self.ren)
    
@@ -172,20 +191,9 @@ class p1(wx.Panel):
            
             #addPoint(self.ren, pSource, color=[1.0,0.0,0.0]) 
             #addPoint(self.ren, pTarget, color=[1.0,0.0,1.0]) 
-            addLine(self.ren, pp1, pp2)
-            addLine(self.ren, pp3, pp4)
-            addLine(self.ren, pp5, pp6)
-            addLine(self.ren, pp7, pp8)
+            if warunek==1:
+                addEdges(self.ren)            
             
-            addLine(self.ren, pp1, pp7)
-            addLine(self.ren, pp3, pp5)
-            addLine(self.ren, pp4, pp6)
-            addLine(self.ren, pp2, pp8)
-            
-            addLine(self.ren, pp1, pp3)
-            addLine(self.ren, pp7, pp5)
-            addLine(self.ren, pp4, pp2)
-            addLine(self.ren, pp6, pp8)            
             
             obbTree = vtk.vtkOBBTree()
             obbTree.SetDataSet(mesh)
@@ -234,9 +242,9 @@ class p1(wx.Panel):
             
             ball = vtk.vtkSphereSource()
             #point.SetCenter(pS)
-            ball.SetRadius(0.5)
-            ball.SetPhiResolution(2)
-            ball.SetThetaResolution(2)
+            ball.SetRadius(0.1)
+            ball.SetPhiResolution(4)
+            ball.SetThetaResolution(4)
     
             ballGlyph = vtkGlyph3D()
             ballGlyph.SetColorModeToColorByScalar()
@@ -303,15 +311,16 @@ class VTKFrame(wx.Frame):
          
  
     def plot(self,event):
-        self.p1.renderthis()
+        self.p1.renderthis(warunek)
         self.SetTitle("STL File Viewer: "+self.p1.filename)
         self.statusbar.SetStatusText("Use W,S,F,R keys and mouse to interact with the model ")
         
     def Xview_position(self,event): 
-        self.p1.cam.Elevation(10)
-        self.p1.cam.Azimuth(0)
+        #self.p1.cam.Elevation(10)
+        #self.p1.cam.Azimuth(0)
+        warunek=1
         #self.p1.ren.SetBackground(1,1,1)
-        self.p1.widget.Render()
+        self.p1.renderthis(warunek)
         print "Xview"
         #self.p1.ren.Render()
         
