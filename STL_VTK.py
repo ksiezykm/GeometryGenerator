@@ -13,9 +13,9 @@ import numpy as np
 from vtk import vtkGlyph3D
 #e_a = 10
 #a_a = 70
-lwX = 25
-lwY = 12
-lwZ = 16
+lwX = 128
+lwY = 128
+lwZ = 32
 
 stoProcent = lwX*lwY
 licz = 0
@@ -32,12 +32,12 @@ siatkaZ = np.arange(0.0,lwZ+1,1.0)
 pSource = [-80.0,0.0,0.0]
 pTarget = [30.0,0.0,0.0]
 
-xmin = -80.0
-xmax = 30.0
-ymin = -40.0
-ymax = 40.0
-zmin = -20.0
-zmax = 20.0
+xmin = -0.5
+xmax = 0.5
+ymin = -0.4
+ymax = 0.4
+zmin = 0.0001
+zmax = 0.3999
 
 rozmiarX=xmax-xmin
 rozmiarY=ymax-ymin
@@ -121,19 +121,20 @@ def addLine(renderer, p1, p2, color=[0.0,0.0,1.0]):
     
     renderer.AddActor(actor)
     
-def IsInside(pX,pY,pZ,mesh):
+def IsInsideCheck(pX,pY,pZ,mesh):
     select = vtk.vtkSelectEnclosedPoints()
     select.SetSurface(mesh)
-            
+    select.SetTolerance(.00001)
+    
     pts = vtk.vtkPoints()
-    pts.InsertNextPoint(float(pX),float(pY),float(pZ))
+    pts.InsertNextPoint((pX),(pY),(pZ))
     pts_pd = vtk.vtkPolyData()
     pts_pd.SetPoints(pts)
     select.SetInput(pts_pd)
     select.Update()
    # print pX,pY,pZ,select.IsInside(0)
     return select.IsInside(0)
-            #select.Update()
+    #select.Update()
     
  
 class p1(wx.Panel):
@@ -191,16 +192,27 @@ class p1(wx.Panel):
            
             #addPoint(self.ren, pSource, color=[1.0,0.0,0.0]) 
             #addPoint(self.ren, pTarget, color=[1.0,0.0,1.0]) 
+            
+            addLine(self.ren, pp1, pp2)
+            addLine(self.ren, pp3, pp4)
+            addLine(self.ren, pp5, pp6)
+            addLine(self.ren, pp7, pp8)
+            
+            addLine(self.ren, pp1, pp7)
+            addLine(self.ren, pp3, pp5)
+            addLine(self.ren, pp4, pp6)
+            addLine(self.ren, pp2, pp8)
+            
+            addLine(self.ren, pp1, pp3)
+            addLine(self.ren, pp7, pp5)
+            addLine(self.ren, pp4, pp2)
+            addLine(self.ren, pp6, pp8)            
+            
             if warunek==1:
                 addEdges(self.ren)            
             
             
-            obbTree = vtk.vtkOBBTree()
-            obbTree.SetDataSet(mesh)
-            obbTree.BuildLocator()
             
-            pointsVTKintersection = vtk.vtkPoints()
-            obbTree.IntersectWithLine(pSource, pTarget, pointsVTKintersection, None)
             #####################################################################################
             featureEdge=vtk.vtkFeatureEdges()
             featureEdge.FeatureEdgesOff()
@@ -228,7 +240,7 @@ class p1(wx.Panel):
                     print (licz/float(stoProcent))*100.0
                     for k in range(1,lwZ+1):
                         sprawdzenie = 0
-                        sprawdzenie = IsInside(siatkaX[i],siatkaY[j],siatkaZ[k],mesh)
+                        sprawdzenie = IsInsideCheck(siatkaX[i],siatkaY[j],siatkaZ[k],mesh)
                         pS = [siatkaX[i],siatkaY[j],siatkaZ[k]]
                         if sprawdzenie == 1:
                             licz2 += 1
@@ -242,7 +254,7 @@ class p1(wx.Panel):
             
             ball = vtk.vtkSphereSource()
             #point.SetCenter(pS)
-            ball.SetRadius(0.1)
+            ball.SetRadius(0.01)
             ball.SetPhiResolution(4)
             ball.SetThetaResolution(4)
     
@@ -260,6 +272,13 @@ class p1(wx.Panel):
     
             self.ren.AddActor(actor)
             #####################################################################################
+            obbTree = vtk.vtkOBBTree()
+            obbTree.SetDataSet(mesh)
+            obbTree.BuildLocator()
+            
+            pointsVTKintersection = vtk.vtkPoints()
+            obbTree.IntersectWithLine(pSource, pTarget, pointsVTKintersection, None)
+            
             pointsVTKIntersectionData = pointsVTKintersection.GetData()
             noPointsVTKIntersection = pointsVTKIntersectionData.GetNumberOfTuples()
             pointsIntersection = []
