@@ -13,13 +13,14 @@ import numpy as np
 from vtk import vtkGlyph3D
 #e_a = 10
 #a_a = 70
-lwX = 128
-lwY = 128
+lwX = 32
+lwY = 64
 lwZ = 32
 
 stoProcent = lwX*lwY
 licz = 0
 licz2 = 0
+licznik = 0
 warunek=0
 
 zrodloGlyph = []
@@ -28,16 +29,18 @@ siatkaX = np.arange(0.0,lwX+1,1.0)
 siatkaY = np.arange(0.0,lwY+1,1.0)
 siatkaZ = np.arange(0.0,lwZ+1,1.0)
 
+maska = np.arange(0,(lwX)*(lwY)*(lwZ),1)
+
 
 pSource = [-80.0,0.0,0.0]
 pTarget = [30.0,0.0,0.0]
 
-xmin = -0.5
-xmax = 0.5
-ymin = -0.4
-ymax = 0.4
-zmin = 0.0001
-zmax = 0.3999
+xmin = -0.0499
+xmax = 0.0499
+ymin = 0.0
+ymax = 0.8
+zmin = 0.0
+zmax = 0.24
 
 rozmiarX=xmax-xmin
 rozmiarY=ymax-ymin
@@ -59,7 +62,7 @@ for i in range(2,lwY+1):
     
 for i in range(2,lwZ+1):
     siatkaZ[i] = siatkaZ[i-1]+hZ   
-    
+
 pp1 = [xmin,ymin,zmin]
 pp2 = [xmax,ymin,zmin]
 pp3 = [xmin,ymax,zmin]
@@ -234,6 +237,7 @@ class p1(wx.Panel):
                 #IsInside(i-5,0.1,0.1,mesh)
             global licz 
             global licz2
+            global licznik
             for i in range(1,lwX+1):
                 for j in range(1,lwY+1):
                     licz += 1
@@ -242,6 +246,9 @@ class p1(wx.Panel):
                         sprawdzenie = 0
                         sprawdzenie = IsInsideCheck(siatkaX[i],siatkaY[j],siatkaZ[k],mesh)
                         pS = [siatkaX[i],siatkaY[j],siatkaZ[k]]
+                        
+                        maska[licznik] = sprawdzenie
+                        licznik=licznik+1
                         if sprawdzenie == 1:
                             licz2 += 1
                             pS2.InsertNextPoint(pS)
@@ -249,12 +256,18 @@ class p1(wx.Panel):
                             #addPoint(self.ren, pS, color=[1.0,0.0,0.0]) 
                         #else:
                             #addPoint(self.ren, pS, color=[0.0,1.0,0.0])
-                         
+            #print maska   
+            
+            zapis = open('Maska.txt', 'w')
+            for i in range(0,lwX*lwY*lwZ):
+                zapis.write(str(maska[i]))
+                zapis.write('\n')
+            zapis.close()
             polydat.SetPoints(pS2)
             
             ball = vtk.vtkSphereSource()
             #point.SetCenter(pS)
-            ball.SetRadius(0.01)
+            ball.SetRadius(0.001)
             ball.SetPhiResolution(4)
             ball.SetThetaResolution(4)
     
