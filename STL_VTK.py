@@ -13,9 +13,9 @@ import numpy as np
 from vtk import vtkGlyph3D
 #e_a = 10
 #a_a = 70
-lwX = 32
-lwY = 64
-lwZ = 32
+lwX = 256
+lwY = 600
+lwZ = 64
 
 stoProcent = lwX*lwY
 licz = 0
@@ -35,12 +35,12 @@ maska = np.arange(0,(lwX)*(lwY)*(lwZ),1)
 pSource = [-80.0,0.0,0.0]
 pTarget = [30.0,0.0,0.0]
 
-xmin = -0.0499
-xmax = 0.0499
+xmin = 0.0
+xmax = 0.24
 ymin = 0.0
 ymax = 0.8
-zmin = 0.0
-zmax = 0.24
+zmin = -0.0499
+zmax = 0.0499
 
 rozmiarX=xmax-xmin
 rozmiarY=ymax-ymin
@@ -238,8 +238,8 @@ class p1(wx.Panel):
             global licz 
             global licz2
             global licznik
-            for i in range(1,lwX+1):
-                for j in range(1,lwY+1):
+            for j in range(1,lwY+1):
+                for i in range(1,lwX+1):
                     licz += 1
                     print (licz/float(stoProcent))*100.0
                     for k in range(1,lwZ+1):
