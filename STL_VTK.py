@@ -13,8 +13,8 @@ import numpy as np
 from vtk import vtkGlyph3D
 #e_a = 10
 #a_a = 70
-lwX = 256
-lwY = 600
+lwX = 512
+lwY = 384
 lwZ = 64
 
 stoProcent = lwX*lwY
@@ -29,6 +29,8 @@ siatkaX = np.arange(0.0,lwX+1,1.0)
 siatkaY = np.arange(0.0,lwY+1,1.0)
 siatkaZ = np.arange(0.0,lwZ+1,1.0)
 
+
+
 maska = np.arange(0,(lwX)*(lwY)*(lwZ),1)
 
 
@@ -36,11 +38,11 @@ pSource = [-80.0,0.0,0.0]
 pTarget = [30.0,0.0,0.0]
 
 xmin = 0.0
-xmax = 0.24
+xmax = 1.09
 ymin = 0.0
-ymax = 0.8
-zmin = -0.0499
-zmax = 0.0499
+ymax = 1.8
+zmin = -0.16
+zmax = 0.16
 
 rozmiarX=xmax-xmin
 rozmiarY=ymax-ymin
@@ -62,6 +64,14 @@ for i in range(2,lwY+1):
     
 for i in range(2,lwZ+1):
     siatkaZ[i] = siatkaZ[i-1]+hZ   
+    
+odczytX = open('MESH_X.txt')
+
+for i in range(1,lwX+1):
+    siatkaX[i] = (odczytX.readline()) 
+    print i,siatkaX[i]
+    
+odczytX.close
 
 pp1 = [xmin,ymin,zmin]
 pp2 = [xmax,ymin,zmin]
