@@ -13,9 +13,9 @@ import numpy as np
 from vtk import vtkGlyph3D
 #e_a = 10
 #a_a = 70
-lwX = 512
-lwY = 384
-lwZ = 64
+lwX = 30
+lwY = 30
+lwZ = 30
 
 stoProcent = lwX*lwY
 licz = 0
@@ -37,12 +37,12 @@ maska = np.arange(0,(lwX)*(lwY)*(lwZ),1)
 pSource = [-80.0,0.0,0.0]
 pTarget = [30.0,0.0,0.0]
 
-xmin = 0.0
-xmax = 1.09
-ymin = 0.0
-ymax = 1.8
-zmin = -0.16
-zmax = 0.16
+xmin = -1.0
+xmax = 1.0
+ymin = -1.0
+ymax = 1.0
+zmin = -1.0
+zmax = 1.0
 
 rozmiarX=xmax-xmin
 rozmiarY=ymax-ymin
@@ -63,15 +63,32 @@ for i in range(2,lwY+1):
     siatkaY[i] = siatkaY[i-1]+hY   
     
 for i in range(2,lwZ+1):
-    siatkaZ[i] = siatkaZ[i-1]+hZ   
+    siatkaZ[i] = siatkaZ[i-1]+hZ 
     
-odczytX = open('MESH_X.txt')
+#odczytX = open('MESH_X.txt')
 
-for i in range(1,lwX+1):
-    siatkaX[i] = (odczytX.readline()) 
-    print i,siatkaX[i]
+#for i in range(1,lwX+1):
+   # siatkaX[i] = (odczytX.readline()) 
+   # print i,siatkaX[i]
     
-odczytX.close
+#odczytX.close
+ 
+#odczytY = open('MESH_Y.txt')
+
+#for i in range(1,lwY+1):
+    #siatkaY[i] = (odczytY.readline()) 
+    #print i,siatkaY[i]
+    
+#odczytY.close
+
+#for i in range(1,lwY+1):
+    #siatkaY[i]=siatkaY[i]/siatkaY[lwY]
+   # print i,siatkaY[i]
+    
+#for i in range(1,lwY+1):
+   # siatkaY[i]=siatkaY[i]*6.0
+   # print i,siatkaY[i]
+
 
 pp1 = [xmin,ymin,zmin]
 pp2 = [xmax,ymin,zmin]
@@ -241,8 +258,10 @@ class p1(wx.Panel):
             select = vtk.vtkSelectEnclosedPoints()
             select.SetSurface(mesh)
             
-            polydat = vtk.vtkPolyData()
-            pS2 = vtk.vtkPoints()
+            inside_polydat = vtk.vtkPolyData()
+            forcing_polydat = vtk.vtkPolyData()
+            inside_points = vtk.vtkPoints()
+            forcing_points = vtk.vtkPoints()
            # for i in range(11):
                 #IsInside(i-5,0.1,0.1,mesh)
             global licz 
@@ -254,14 +273,28 @@ class p1(wx.Panel):
                     print (licz/float(stoProcent))*100.0
                     for k in range(1,lwZ+1):
                         sprawdzenie = 0
+                        siatkaX[1]=xmin+0.001
+                        siatkaX[lwX]=xmax-0.001
+                        siatkaY[1]=ymin+0.001
+                        siatkaY[lwY]=ymax-0.001
+                        siatkaZ[1]=zmin+0.001
+                        siatkaZ[lwZ]=zmax-0.001
                         sprawdzenie = IsInsideCheck(siatkaX[i],siatkaY[j],siatkaZ[k],mesh)
-                        pS = [siatkaX[i],siatkaY[j],siatkaZ[k]]
+                        siatkaX[1]=xmin
+                        siatkaX[lwX]=xmax
+                        siatkaY[1]=ymin
+                        siatkaY[lwY]=ymax
+                        siatkaZ[1]=zmin
+                        siatkaZ[lwZ]=zmax
+                        mesh_point_inside = [siatkaX[i],siatkaY[j],siatkaZ[k]]
+                        mesh_point_forcing = [siatkaX[i]+1.0,siatkaY[j],siatkaZ[k]]
                         
                         maska[licznik] = sprawdzenie
                         licznik=licznik+1
                         if sprawdzenie == 1:
                             licz2 += 1
-                            pS2.InsertNextPoint(pS)
+                            inside_points.InsertNextPoint(mesh_point_inside)
+                            forcing_points.InsertNextPoint(mesh_point_forcing)
                             #zrodloGlyph[licz2] = pS
                             #addPoint(self.ren, pS, color=[1.0,0.0,0.0]) 
                         #else:
@@ -272,19 +305,20 @@ class p1(wx.Panel):
             for i in range(0,lwX*lwY*lwZ):
                 zapis.write(str(maska[i]))
                 zapis.write('\n')
-            zapis.close()
-            polydat.SetPoints(pS2)
+            zapis.close()		
+	    print "zapisano Maske"
+            inside_polydat.SetPoints(inside_points)
             
-            ball = vtk.vtkSphereSource()
+            inside = vtk.vtkSphereSource()
             #point.SetCenter(pS)
-            ball.SetRadius(0.001)
-            ball.SetPhiResolution(4)
-            ball.SetThetaResolution(4)
+            inside.SetRadius(0.02)
+            inside.SetPhiResolution(8)
+            inside.SetThetaResolution(8)
     
             ballGlyph = vtkGlyph3D()
             ballGlyph.SetColorModeToColorByScalar()
-            ballGlyph.SetSourceConnection(ball.GetOutputPort())
-            ballGlyph.SetInput(polydat)
+            ballGlyph.SetSourceConnection(inside.GetOutputPort())
+            ballGlyph.SetInput(inside_polydat)
       
             mapper = vtk.vtkPolyDataMapper()
             mapper.SetInputConnection(ballGlyph.GetOutputPort())
@@ -292,6 +326,28 @@ class p1(wx.Panel):
             actor = vtk.vtkActor()
             actor.SetMapper(mapper)
             actor.GetProperty().SetColor([1.0,0.0,0.0])
+    
+            self.ren.AddActor(actor)
+            ######################################################################################
+            forcing_polydat.SetPoints(forcing_points)
+            
+            forcing = vtk.vtkSphereSource()
+            #point.SetCenter(pS)
+            forcing.SetRadius(0.02)
+            forcing.SetPhiResolution(8)
+            forcing.SetThetaResolution(8)
+    
+            forcingGlyph = vtkGlyph3D()
+            forcingGlyph.SetColorModeToColorByScalar()
+            forcingGlyph.SetSourceConnection(forcing.GetOutputPort())
+            forcingGlyph.SetInput(forcing_polydat)
+      
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetInputConnection(forcingGlyph.GetOutputPort())
+    
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            actor.GetProperty().SetColor([0.0,1.0,0.0])
     
             self.ren.AddActor(actor)
             #####################################################################################
