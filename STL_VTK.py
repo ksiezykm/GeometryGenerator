@@ -13,9 +13,9 @@ import numpy as np
 from vtk import vtkGlyph3D
 #e_a = 10
 #a_a = 70
-lwX = 30
-lwY = 30
-lwZ = 30
+lwX = 20
+lwY = 20
+lwZ = 20
 
 stoProcent = lwX*lwY
 licz = 0
@@ -32,7 +32,8 @@ siatkaZ = np.arange(0.0,lwZ+1,1.0)
 
 
 maska = np.arange(0,(lwX)*(lwY)*(lwZ),1)
-
+maska3D = np.arange(0,(lwX)*(lwY)*(lwZ),1).reshape(lwX,lwY,lwZ)
+#print maska3D
 
 pSource = [-80.0,0.0,0.0]
 pTarget = [30.0,0.0,0.0]
@@ -287,30 +288,41 @@ class p1(wx.Panel):
                         siatkaZ[1]=zmin
                         siatkaZ[lwZ]=zmax
                         mesh_point_inside = [siatkaX[i],siatkaY[j],siatkaZ[k]]
-                        mesh_point_forcing = [siatkaX[i]+1.0,siatkaY[j],siatkaZ[k]]
+                        #mesh_point_forcing = [siatkaX[i]+1.0,siatkaY[j],siatkaZ[k]]
                         
                         maska[licznik] = sprawdzenie
                         licznik=licznik+1
                         if sprawdzenie == 1:
-                            licz2 += 1
                             inside_points.InsertNextPoint(mesh_point_inside)
-                            forcing_points.InsertNextPoint(mesh_point_forcing)
-                            #zrodloGlyph[licz2] = pS
-                            #addPoint(self.ren, pS, color=[1.0,0.0,0.0]) 
-                        #else:
-                            #addPoint(self.ren, pS, color=[0.0,1.0,0.0])
-            #print maska   
+                            #forcing_points.InsertNextPoint(mesh_point_forcing)
+                            
+            licznik=0   
+            for j in range(0,lwY):
+                for i in range(0,lwX):
+                    for k in range(0,lwZ):
+                        maska3D[j][i][k]=maska[licznik]
+                        licznik=licznik+1
             
+            #print maska3D
+            licznik=0
+            for j in range(0,lwY):
+                for i in range(0,lwX-1):
+                    for k in range(0,lwZ):
+                        mesh_point_forcing = [siatkaX[i+1],siatkaY[j+1],siatkaZ[k+1]]
+                        if (maska3D[j][i][k] == 0) and (maska3D[j][i+1][k] == 1):
+                            forcing_points.InsertNextPoint(mesh_point_forcing)
+                        licznik=licznik+1
+                        
+                        
             zapis = open('Maska.txt', 'w')
             for i in range(0,lwX*lwY*lwZ):
                 zapis.write(str(maska[i]))
                 zapis.write('\n')
             zapis.close()		
-	    print "zapisano Maske"
+            print "zapisano Maske"
             inside_polydat.SetPoints(inside_points)
             
             inside = vtk.vtkSphereSource()
-            #point.SetCenter(pS)
             inside.SetRadius(0.02)
             inside.SetPhiResolution(8)
             inside.SetThetaResolution(8)
@@ -333,9 +345,9 @@ class p1(wx.Panel):
             
             forcing = vtk.vtkSphereSource()
             #point.SetCenter(pS)
-            forcing.SetRadius(0.02)
-            forcing.SetPhiResolution(8)
-            forcing.SetThetaResolution(8)
+            forcing.SetRadius(0.05)
+            forcing.SetPhiResolution(4)
+            forcing.SetThetaResolution(4)
     
             forcingGlyph = vtkGlyph3D()
             forcingGlyph.SetColorModeToColorByScalar()
