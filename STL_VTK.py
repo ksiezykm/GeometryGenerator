@@ -11,11 +11,12 @@ import vtk
 from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 import numpy as np
 from vtk import vtkGlyph3D
+from obliczenia import *
 #e_a = 10
 #a_a = 70
-lwX = 20
-lwY = 20
-lwZ = 20
+lwX = 6
+lwY = 6
+lwZ = 6
 
 stoProcent = lwX*lwY
 licz = 0
@@ -32,8 +33,12 @@ siatkaZ = np.arange(0.0,lwZ+1,1.0)
 
 
 maska = np.arange(0,(lwX)*(lwY)*(lwZ),1)
-maska3D = np.arange(0,(lwX)*(lwY)*(lwZ),1).reshape(lwX,lwY,lwZ)
+maska3D = np.arange(0,(lwX)*(lwY)*(lwZ),1).reshape(lwY,lwX,lwZ)
+boundary_points = np.arange(0,(lwX)*(lwY)*(lwZ),1)
+intersection = []*3
 #print maska3D
+
+print intersection
 
 pSource = [-80.0,0.0,0.0]
 pTarget = [30.0,0.0,0.0]
@@ -268,6 +273,7 @@ class p1(wx.Panel):
             global licz 
             global licz2
             global licznik
+            
             for j in range(1,lwY+1):
                 for i in range(1,lwX+1):
                     licz += 1
@@ -297,13 +303,20 @@ class p1(wx.Panel):
                             #forcing_points.InsertNextPoint(mesh_point_forcing)
                             
             licznik=0   
+            
+    
             for j in range(0,lwY):
                 for i in range(0,lwX):
                     for k in range(0,lwZ):
+                        #print j,i,k
                         maska3D[j][i][k]=maska[licznik]
                         licznik=licznik+1
             
             #print maska3D
+            find_forcing_points(lwY,lwX,lwZ,maska3D,forcing_points,siatkaX,siatkaY,siatkaZ,boundary_points,mesh,intersection)
+            
+            print intersection            
+            """
             licznik=0
             for j in range(0,lwY):
                 for i in range(0,lwX-1):
@@ -312,7 +325,7 @@ class p1(wx.Panel):
                         if (maska3D[j][i][k] == 0) and (maska3D[j][i+1][k] == 1):
                             forcing_points.InsertNextPoint(mesh_point_forcing)
                         licznik=licznik+1
-                        
+              """          
                         
             zapis = open('Maska.txt', 'w')
             for i in range(0,lwX*lwY*lwZ):
@@ -345,9 +358,9 @@ class p1(wx.Panel):
             
             forcing = vtk.vtkSphereSource()
             #point.SetCenter(pS)
-            forcing.SetRadius(0.05)
-            forcing.SetPhiResolution(4)
-            forcing.SetThetaResolution(4)
+            forcing.SetRadius(0.02)
+            forcing.SetPhiResolution(8)
+            forcing.SetThetaResolution(8)
     
             forcingGlyph = vtkGlyph3D()
             forcingGlyph.SetColorModeToColorByScalar()
