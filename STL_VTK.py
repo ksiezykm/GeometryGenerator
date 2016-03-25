@@ -14,9 +14,9 @@ from vtk import vtkGlyph3D
 from obliczenia import *
 #e_a = 10
 #a_a = 70
-lwX = 6
-lwY = 6
-lwZ = 6
+lwX = 50
+lwY = 200
+lwZ = 50
 
 stoProcent = lwX*lwY
 licz = 0
@@ -34,6 +34,7 @@ siatkaZ = np.arange(0.0,lwZ+1,1.0)
 
 maska = np.arange(0,(lwX)*(lwY)*(lwZ),1)
 maska3D = np.arange(0,(lwX)*(lwY)*(lwZ),1).reshape(lwY,lwX,lwZ)
+maska3D_forcing = np.arange(0,(lwX)*(lwY)*(lwZ),1).reshape(lwY,lwX,lwZ)
 boundary_points = np.arange(0,(lwX)*(lwY)*(lwZ),1)
 intersection = []*3
 #print maska3D
@@ -46,7 +47,7 @@ pTarget = [30.0,0.0,0.0]
 xmin = -1.0
 xmax = 1.0
 ymin = -1.0
-ymax = 1.0
+ymax = 7.0
 zmin = -1.0
 zmax = 1.0
 
@@ -266,8 +267,10 @@ class p1(wx.Panel):
             
             inside_polydat = vtk.vtkPolyData()
             forcing_polydat = vtk.vtkPolyData()
+            interpolation_polydat = vtk.vtkPolyData()
             inside_points = vtk.vtkPoints()
             forcing_points = vtk.vtkPoints()
+            interpolation_points = vtk.vtkPoints()
            # for i in range(11):
                 #IsInside(i-5,0.1,0.1,mesh)
             global licz 
@@ -313,9 +316,12 @@ class p1(wx.Panel):
                         licznik=licznik+1
             
             #print maska3D
-            find_forcing_points(lwY,lwX,lwZ,maska3D,forcing_points,siatkaX,siatkaY,siatkaZ,boundary_points,mesh,intersection)
+            find_forcing_points(lwY,lwX,lwZ,maska3D,forcing_points,siatkaX,siatkaY,siatkaZ,boundary_points,mesh,intersection,maska3D_forcing,interpolation_points)
             
-            print intersection            
+            print featureEdge
+            #print intersection 
+            #print "+++++++++++++++++++="
+            #print maska3D_forcing
             """
             licznik=0
             for j in range(0,lwY):
@@ -373,6 +379,28 @@ class p1(wx.Panel):
             actor = vtk.vtkActor()
             actor.SetMapper(mapper)
             actor.GetProperty().SetColor([0.0,1.0,0.0])
+    
+            self.ren.AddActor(actor)
+            #####################################################################################
+            interpolation_polydat.SetPoints(interpolation_points)
+            
+            interpolation = vtk.vtkSphereSource()
+            #point.SetCenter(pS)
+            interpolation.SetRadius(0.02)
+            interpolation.SetPhiResolution(8)
+            interpolation.SetThetaResolution(8)
+    
+            interpolationGlyph = vtkGlyph3D()
+            interpolationGlyph.SetColorModeToColorByScalar()
+            interpolationGlyph.SetSourceConnection(interpolation.GetOutputPort())
+            interpolationGlyph.SetInput(interpolation_polydat)
+      
+            mapper = vtk.vtkPolyDataMapper()
+            mapper.SetInputConnection(interpolationGlyph.GetOutputPort())
+    
+            actor = vtk.vtkActor()
+            actor.SetMapper(mapper)
+            actor.GetProperty().SetColor([0.0,0.0,1.0])
     
             self.ren.AddActor(actor)
             #####################################################################################
