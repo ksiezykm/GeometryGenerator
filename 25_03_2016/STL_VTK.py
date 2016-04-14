@@ -12,12 +12,11 @@ from vtk.wx.wxVTKRenderWindowInteractor import wxVTKRenderWindowInteractor
 import numpy as np
 from vtk import vtkGlyph3D
 from obliczenia import *
-from dane_do_interpolacji import *
 #e_a = 10
 #a_a = 70
-lwX = 8
-lwY = 8
-lwZ = 8
+lwX = 50
+lwY = 200
+lwZ = 50
 
 stoProcent = lwX*lwY
 licz = 0
@@ -38,13 +37,6 @@ maska3D = np.arange(0,(lwX)*(lwY)*(lwZ),1).reshape(lwY,lwX,lwZ)
 maska3D_forcing = np.arange(0,(lwX)*(lwY)*(lwZ),1).reshape(lwY,lwX,lwZ)
 boundary_points = np.arange(0,(lwX)*(lwY)*(lwZ),1)
 intersection = []*3
-normals = []*3
-fnix = []# forcing_node_index
-fniy = []# forcing_node_index
-fniz = []# forcing_node_index
-fncx = []# forcing_node_coordinate
-fncy= []# forcing_node_coordinate
-fncz = []# forcing_node_coordinate
 #print maska3D
 
 print intersection
@@ -55,7 +47,7 @@ pTarget = [30.0,0.0,0.0]
 xmin = -1.0
 xmax = 1.0
 ymin = -1.0
-ymax = 1.0
+ymax = 7.0
 zmin = -1.0
 zmax = 1.0
 
@@ -315,7 +307,6 @@ class p1(wx.Panel):
                             
             licznik=0   
             
-            licznik_forcing=0
     
             for j in range(0,lwY):
                 for i in range(0,lwX):
@@ -325,46 +316,9 @@ class p1(wx.Panel):
                         licznik=licznik+1
             
             #print maska3D
-            find_forcing_points(lwY,lwX,lwZ,maska3D,forcing_points,siatkaX,siatkaY,siatkaZ,boundary_points,mesh,intersection,maska3D_forcing,interpolation_points,fnix,fniy,fniz,fncx,fncy,fncz)
+            find_forcing_points(lwY,lwX,lwZ,maska3D,forcing_points,siatkaX,siatkaY,siatkaZ,boundary_points,mesh,intersection,maska3D_forcing,interpolation_points)
             
-            for j in range(0,lwY):
-                for i in range(0,lwX):
-                    for k in range(0,lwZ):
-                        if maska3D_forcing[j][i][k] > 0:
-                            licznik_forcing = licznik_forcing+maska3D_forcing[j][i][k]
-                            
-            for i in range(0,licznik_forcing):
-                print i,fnix[i],fniy[i],fniz[i],fncx[i],fncy[i],fncz[i]
-                       
-            
-            
-            odczyt_STL(self.filename,normals,licznik_forcing,fnix,fniy,fniz,fncx,fncy,fncz)
-            zp = [0,0,0]
-            
-            for i in range(0,licznik_forcing):
-                if fncx[i]>0 and normals[i][0]<0:
-                    normals[i][0]=normals[i][0]*(-1.0)
-                if fncx[i]<0 and normals[i][0]>0:
-                    normals[i][0]=normals[i][0]*(-1.0)
-                if fncy[i]>0 and normals[i][1]<0:
-                    normals[i][1]=normals[i][1]*(-1.0)
-                if fncy[i]<0 and normals[i][1]>0:
-                    normals[i][1]=normals[i][1]*(-1.0)
-                if fncz[i]>0 and normals[i][2]<0:
-                    normals[i][2]=normals[i][2]*(-1.0)
-                if fncz[i]<0 and normals[i][2]>0:
-                    normals[i][2]=normals[i][2]*(-1.0)
-            
-            for i in range(0,licznik_forcing):
-                zp1 = [fncx[i],fncy[i],fncz[i]]
-                zp2 = [normals[i][0]+fncx[i],normals[i][1]+fncy[i],normals[i][2]+fncz[i]]
-                #normals[i][0]=normals[i][0]+fncx[i]
-                #normals[i][1]=normals[i][1]+fncy[i]
-                #normals[i][2]=normals[i][2]+fncz[i]
-                
-                addLine(self.ren, zp1, zp2)
-                print i,normals[i],zp1,zp2
-            
+            print featureEdge
             #print intersection 
             #print "+++++++++++++++++++="
             #print maska3D_forcing
@@ -428,7 +382,6 @@ class p1(wx.Panel):
     
             self.ren.AddActor(actor)
             #####################################################################################
-            """
             interpolation_polydat.SetPoints(interpolation_points)
             
             interpolation = vtk.vtkSphereSource()
@@ -450,7 +403,6 @@ class p1(wx.Panel):
             actor.GetProperty().SetColor([0.0,0.0,1.0])
     
             self.ren.AddActor(actor)
-            """
             #####################################################################################
             obbTree = vtk.vtkOBBTree()
             obbTree.SetDataSet(mesh)
